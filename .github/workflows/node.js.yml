@@ -1,0 +1,31 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - name: Set OpenSSL legacy provider for Node.js 18.x and 22.x
+      if: matrix.node-version == '18.x' || matrix.node-version == '22.x'
+      run: echo "NODE_OPTIONS=--openssl-legacy-provider" >> $GITHUB_ENV
+    - run: npm ci
+    - name: Build the Project
+      run: npm run build --if-present
+    - name: Run Tests
+      run: npm test
